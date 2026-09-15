@@ -240,9 +240,6 @@ function Dashboard() {
                     <h3 className="text-base font-semibold text-slate-900 transition-colors group-hover:text-indigo-600">
                       {meeting.filename}
                     </h3>
-                    <p className="mt-0.5 text-xs text-slate-400 font-medium">
-                      Meeting #{meeting.id}
-                    </p>
                   </div>
 
                   <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">

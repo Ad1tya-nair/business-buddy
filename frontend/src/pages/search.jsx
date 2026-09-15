@@ -139,7 +139,7 @@ export default function Search() {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="text-sm font-semibold text-slate-900 transition-colors group-hover:text-indigo-600">
-                          Meeting {source.meeting_id}
+                          Meeting source
                         </p>
                         <p className="mt-0.5 text-xs text-slate-400 font-medium">
                           {source.start_time.toFixed(2)}s –{" "}

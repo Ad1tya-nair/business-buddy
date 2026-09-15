@@ -104,10 +104,7 @@ function Meetings() {
                   </div>
 
                   <p className="mt-1 text-xs text-slate-400 font-medium">
-                    Meeting #{meeting.id}
-                    {meeting.created_at && (
-                      <> · {meeting.created_at}</>
-                    )}
+                    {meeting.created_at || "Processed meeting"}
                   </p>
                 </div>
 
