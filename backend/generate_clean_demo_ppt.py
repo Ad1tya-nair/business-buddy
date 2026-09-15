@@ -306,12 +306,11 @@ def build_demo_deck():
     add_card(s7, Inches(0.8), Inches(2.0), Inches(3.6), Inches(4.7), "1. AI Extraction", [
         ("Automated Detection", "Extracts task description, suggested owner, and due date."),
         ("Confidence Scoring", "Rates confidence (0-100%) so users know reliability."),
-        ("Type Classification", "Categorized as committed (agreed) or possible (tentative)."),
         ("Safe Initial State", "Always initialized as 'Pending Review'—never auto-executes.")
     ], border_color=COLOR_AMBER)
 
     add_card(s7, Inches(4.8), Inches(2.0), Inches(3.6), Inches(4.7), "2. Inline Editing", [
-        ("Per-Item Edit Form", "Edit task, owner, owner email, due date, and type on each card."),
+        ("Per-Item Edit Form", "Edit task, owner, owner email, and due date on each card."),
         ("Stay in Pending", "Saving edits persists to SQLite but keeps the item Pending Review."),
         ("Audit History Trail", "Every change is logged in action_item_history (old value -> new value)."),
         ("Human Modified Tag", "Clearly displays 'Edited by human' on modified records.")

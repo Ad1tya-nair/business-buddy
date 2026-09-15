@@ -282,7 +282,7 @@ Crucially, every single sentence is timestamped down to the fraction of a second
 
     add_card(s5, Inches(6.8), Inches(2.0), Inches(5.7), Inches(4.8), "Extracted Intelligence Entities", [
         ("Executive Summary", "Curated bullet points capturing strategic meeting themes and core discussion arcs."),
-        ("Action Items", "Task description, suggested owner, extracted due date, type (committed vs. possible), confidence score (0.0-1.0), and timestamp."),
+        ("Action Items", "Task description, suggested owner, extracted due date, confidence score (0.0-1.0), and timestamp."),
         ("Meeting Requests", "Topic, proposed date, proposed time, and source timestamp for suggested follow-up syncs."),
         ("Decisions & Consensus", "Explicit business and technical agreements reached during the meeting."),
         ("Risks & Blockers", "Threats to delivery, dependencies, or reliability flagged by participants.")
@@ -337,12 +337,11 @@ Human edits in SQLite never tamper with the FAISS evidence index."
     add_card(s7, Inches(0.8), Inches(2.0), Inches(3.6), Inches(4.8), "Stage 1: AI Detection", [
         ("Auto-Categorization", "Items initialized with status = pending_review and confidence score."),
         ("Metadata Parsing", "AI extracts task name, proposed owner, and natural-language due date."),
-        ("Type Classification", "Classified as either 'committed' (explicit promise) or 'possible' (tentative discussion)."),
         ("Zero Side-Effects", "No emails sent, no external state changed without human intervention.")
     ], border_accent=ACCENT_AMBER)
 
     add_card(s7, Inches(4.8), Inches(2.0), Inches(3.6), Inches(4.8), "Stage 2: Human Refinement", [
-        ("Per-Item Inline Editing", "Admin can edit Task, Owner, Owner Email, Due Date, and Type directly on the card."),
+        ("Per-Item Inline Editing", "Admin can edit Task, Owner, Owner Email, and Due Date directly on the card."),
         ("Pending State Preserved", "Saving an edit does NOT auto-confirm. It persists to SQLite and remains pending review."),
         ("Audit History Insertion", "Every changed field inserts an entry into action_item_history (old_val -> new_val)."),
         ("human_modified Flag", "Item is permanently tagged with human_modified = 1 and updated_at timestamp.")

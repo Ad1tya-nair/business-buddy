@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
-import { getTasks, getUsers, toggleTaskComplete } from "../services/api"
-
-const memberNames = ["Priya", "Simon", "Mathew", "Joseph"]
+import {
+  createActionItem,
+  getMeetings,
+  getTasks,
+  getUsers,
+  toggleTaskComplete,
+} from "../services/api"
 
 function Tasks() {
   const { user, isLead } = useAuth()
@@ -14,15 +18,33 @@ function Tasks() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [updatingId, setUpdatingId] = useState(null)
+  const [members, setMembers] = useState([])
+  const [meetings, setMeetings] = useState([])
+  const [showCreate, setShowCreate] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [createForm, setCreateForm] = useState({
+    task: "",
+    meeting_id: "",
+    owner: "",
+    owner_email: "",
+    due_date: "",
+  })
 
   useEffect(() => {
     async function loadTasks() {
       try {
         setLoading(true)
         const owner = !isLead && view === "mine" ? user?.name : null
-        const data = await getTasks(null, owner)
+        const [data, users, meetingData] = await Promise.all([
+          getTasks(null, owner),
+          isLead ? getUsers() : Promise.resolve([]),
+          isLead ? getMeetings() : Promise.resolve([]),
+        ])
         setTasks(data)
-        if (isLead) await getUsers()
+        if (isLead) {
+          setMembers(users)
+          setMeetings(meetingData)
+        }
         setError(null)
       } catch (err) {
         setError(err.message)
@@ -32,6 +54,52 @@ function Tasks() {
     }
     loadTasks()
   }, [isLead, user?.name, view])
+
+  function updateCreateField(field, value) {
+    setCreateForm((current) => ({
+      ...current,
+      [field]: value,
+      ...(field === "owner"
+        ? {
+            owner_email: members.find((member) => member.name === value)?.email || "",
+          }
+        : {}),
+    }))
+  }
+
+  async function handleCreateTask(event) {
+    event.preventDefault()
+
+    if (!createForm.task.trim()) {
+      setError("Task description is required.")
+      return
+    }
+
+    try {
+      setCreating(true)
+      setError(null)
+      const created = await createActionItem({
+        ...createForm,
+        task: createForm.task.trim(),
+        owner: createForm.owner || null,
+        owner_email: createForm.owner_email || null,
+        due_date: createForm.due_date.trim() || null,
+      })
+      setTasks((previous) => [created, ...previous])
+      setCreateForm((current) => ({
+        ...current,
+        task: "",
+        owner: "",
+        owner_email: "",
+        due_date: "",
+      }))
+      setShowCreate(false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setCreating(false)
+    }
+  }
 
   async function handleComplete(task) {
     try {
@@ -70,13 +138,115 @@ function Tasks() {
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
             Tasks
           </h1>
-          <p className="mt-1.5 text-sm text-slate-500">
-            {isLead
-              ? "Monitor and manage action items across the entire team."
-              : "Review and complete the action items assigned to you."}
-          </p>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <p className="mt-1.5 text-sm text-slate-500">
+              {isLead
+                ? "Monitor and manage action items across the entire team."
+                : "Review and complete the action items assigned to you."}
+            </p>
+            {isLead && (
+              <button
+                type="button"
+                onClick={() => setShowCreate((current) => !current)}
+                className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+              >
+                {showCreate ? "Close form" : "Add task"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      {isLead && showCreate && (
+        <form
+          onSubmit={handleCreateTask}
+          className="rounded-2xl border border-indigo-200 bg-white p-6 shadow-md"
+        >
+          <div className="mb-5">
+            <h2 className="text-lg font-semibold text-slate-900">Create and assign a task</h2>
+            <p className="mt-1 text-sm text-slate-500">Manual tasks are added as confirmed team tasks.</p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="md:col-span-2">
+              <span className="mb-1.5 block text-sm font-semibold text-slate-700">Task</span>
+              <input
+                value={createForm.task}
+                onChange={(event) => updateCreateField("task", event.target.value)}
+                placeholder="e.g. Send the revised launch plan"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </label>
+
+            <label>
+              <span className="mb-1.5 block text-sm font-semibold text-slate-700">Source meeting</span>
+              <select
+                value={createForm.meeting_id}
+                onChange={(event) => updateCreateField("meeting_id", event.target.value)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              >
+                <option value="">No source meeting (manual task)</option>
+                {meetings.map((meeting) => (
+                  <option key={meeting.id} value={meeting.id}>{meeting.filename}</option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span className="mb-1.5 block text-sm font-semibold text-slate-700">Assign to</span>
+              <select
+                value={createForm.owner}
+                onChange={(event) => updateCreateField("owner", event.target.value)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              >
+                <option value="">Unassigned</option>
+                {members.map((member) => (
+                  <option key={member.id} value={member.name}>{member.name}</option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span className="mb-1.5 block text-sm font-semibold text-slate-700">Owner email</span>
+              <input
+                type="email"
+                value={createForm.owner_email}
+                onChange={(event) => updateCreateField("owner_email", event.target.value)}
+                placeholder="owner@example.com"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </label>
+
+            <label>
+              <span className="mb-1.5 block text-sm font-semibold text-slate-700">Due date</span>
+              <input
+                value={createForm.due_date}
+                onChange={(event) => updateCreateField("due_date", event.target.value)}
+                placeholder="e.g. Friday"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </label>
+
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button
+              type="submit"
+              disabled={creating}
+              className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {creating ? "Creating..." : "Create task"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCreate(false)}
+              className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
 
       {/* Member Tabs: My Tasks vs All Team Tasks */}
       {!isLead && (
@@ -109,9 +279,9 @@ function Tasks() {
             className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 shadow-2xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
           >
             <option value="all">All members</option>
-            {memberNames.map((name) => (
-              <option key={name} value={name}>
-                {name}
+            {members.map((member) => (
+              <option key={member.id} value={member.name}>
+                {member.name}
               </option>
             ))}
             <option value="unassigned">Unassigned</option>
@@ -235,12 +405,16 @@ function Tasks() {
               </div>
 
               <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3.5">
-                <Link
-                  to={`/meetings/${task.meeting_id}`}
-                  className="text-xs font-semibold text-indigo-600 transition hover:text-indigo-700"
-                >
-                  From {task.filename} →
-                </Link>
+                {task.meeting_id ? (
+                  <Link
+                    to={`/meetings/${task.meeting_id}`}
+                    className="text-xs font-semibold text-indigo-600 transition hover:text-indigo-700"
+                  >
+                    From {task.filename} →
+                  </Link>
+                ) : (
+                  <span className="text-xs font-semibold text-slate-500">Manual task</span>
+                )}
                 {task.completed && task.completed_at && (
                   <span className="text-[11px] text-slate-400">
                     Completed on {task.completed_at}

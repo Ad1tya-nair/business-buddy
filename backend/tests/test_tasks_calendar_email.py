@@ -63,8 +63,8 @@ def test_action_item_edit_history_and_tasks():
     # Insert a test action item
     cursor.execute(
         """
-        INSERT INTO action_items (meeting_id, task, owner, due_date, confidence, source_timestamp, status, type)
-        VALUES (?, 'Test Action Item For Flow', 'Initial Owner', '2026-09-15', 0.9, '01:00', 'pending_review', 'committed')
+        INSERT INTO action_items (meeting_id, task, owner, due_date, confidence, source_timestamp, status)
+        VALUES (?, 'Test Action Item For Flow', 'Initial Owner', '2026-09-15', 0.9, '01:00', 'pending_review')
         """,
         (meeting_id,),
     )

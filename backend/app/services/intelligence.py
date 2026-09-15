@@ -34,8 +34,7 @@ Return ONLY valid JSON with exactly these fields:
       "due_date": null,
       "confidence": 0.95,
       "source_timestamp": "00:00",
-      "status": "pending_review",
-      "type": "committed"
+      "status": "pending_review"
     }}
   ],
   "meeting_requests": [
@@ -89,7 +88,6 @@ Rules:
 - Action items must be explicit commitments or accepted requests.
 - Tentative suggestions are not confirmed actions.
 - Action items use status "pending_review".
-- Use type "committed" for clear commitments and "possible" for tentative suggestions.
 - Meeting requests use status "pending_review".
 - Decisions must be actual agreements, approvals, selections, or conclusions.
 - Decisions use status "detected".

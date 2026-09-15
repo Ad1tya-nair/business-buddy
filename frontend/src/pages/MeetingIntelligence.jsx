@@ -371,7 +371,6 @@ function MeetingIntelligence() {
         owner: item.owner || "",
         owner_email: item.owner_email || "",
         due_date: item.due_date || "",
-        type: item.type || "committed",
       },
     }))
     setError(null)
@@ -414,7 +413,6 @@ function MeetingIntelligence() {
         owner: editData.owner?.trim() || null,
         owner_email: editData.owner_email?.trim() || null,
         due_date: editData.due_date?.trim() || null,
-        type: editData.type || "committed",
       }
 
       await updateActionItem(itemId, payload)
@@ -1223,35 +1221,6 @@ function MeetingIntelligence() {
 </div>
 
 
-<div>
-  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-500">
-    Type
-  </label>
-
-  <select
-    value={
-      editingItemIds[item.id].type ||
-      "committed"
-    }
-    onChange={(event) =>
-      updateEditingActionField(
-        item.id,
-        "type",
-        event.target.value
-      )
-    }
-    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-200 outline-none focus:border-slate-500"
-  >
-    <option value="committed">
-      Committed
-    </option>
-
-    <option value="possible">
-      Possible
-    </option>
-  </select>
-</div>
-
 </div>
 
 
@@ -1353,17 +1322,6 @@ function MeetingIntelligence() {
                               Source:{" "}
                               <span className="text-slate-400">
                                 {item.source_timestamp}
-                              </span>
-                            </span>
-
-                          )}
-
-                          {item.type && (
-
-                            <span>
-                              Type:{" "}
-                              <span className="text-slate-400 capitalize">
-                                {item.type}
                               </span>
                             </span>
 

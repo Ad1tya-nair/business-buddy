@@ -228,6 +228,96 @@ async def analyze_meeting(
 # ACTION ITEMS
 # ============================================================
 
+@app.post("/action-items")
+def create_action_item(
+    data: dict,
+    _user: dict = Depends(require_lead),
+):
+    task = str(data.get("task") or "").strip()
+    meeting_id = data.get("meeting_id")
+    owner = str(data.get("owner") or "").strip() or None
+    owner_email = str(data.get("owner_email") or "").strip() or None
+    due_date = str(data.get("due_date") or "").strip() or None
+
+    if not task:
+        raise HTTPException(status_code=400, detail="Task description is required")
+
+    if meeting_id not in (None, ""):
+        try:
+            meeting_id = int(meeting_id)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="Invalid source meeting")
+    else:
+        meeting_id = None
+
+    if owner_email and ("@" not in owner_email or "." not in owner_email.split("@")[-1]):
+        raise HTTPException(status_code=400, detail="Invalid owner email address")
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    if meeting_id is not None:
+        meeting = cursor.execute(
+            "SELECT id FROM meetings WHERE id = ?",
+            (meeting_id,),
+        ).fetchone()
+        if meeting is None:
+            connection.close()
+            raise HTTPException(status_code=404, detail="Source meeting not found")
+
+    cursor.execute(
+        """
+        INSERT INTO action_items (
+            meeting_id,
+            task,
+            owner,
+            owner_email,
+            due_date,
+            source_timestamp,
+            status,
+            human_modified,
+            updated_at,
+            email_sent,
+            completed
+        )
+        VALUES (?, ?, ?, ?, ?, ?, 'confirmed', 1, CURRENT_TIMESTAMP, 0, 0)
+        """,
+        (meeting_id, task, owner, owner_email, due_date, None),
+    )
+    action_item_id = cursor.lastrowid
+    connection.commit()
+
+    item = cursor.execute(
+        """
+        SELECT
+            action_items.id,
+            action_items.meeting_id,
+            action_items.task,
+            action_items.owner,
+            action_items.owner_email,
+            action_items.due_date,
+            action_items.source_timestamp,
+            action_items.status,
+            action_items.human_modified,
+            action_items.updated_at,
+            action_items.email_sent,
+            action_items.completed,
+            action_items.completed_at,
+            meetings.filename
+        FROM action_items
+        LEFT JOIN meetings ON action_items.meeting_id = meetings.id
+        WHERE action_items.id = ?
+        """,
+        (action_item_id,),
+    ).fetchone()
+    connection.close()
+
+    return {
+        **dict(item),
+        "email_sent": bool(item["email_sent"]),
+        "completed": bool(item["completed"]),
+    }
+
 @app.get("/action-items/{action_item_id}")
 def get_action_item(
     action_item_id: int
@@ -247,7 +337,6 @@ def get_action_item(
             confidence,
             source_timestamp,
             status,
-            type,
             human_modified,
             updated_at,
             email_sent,
@@ -293,7 +382,7 @@ def confirm_action_item(
             action_items.email_sent,
             meetings.filename
         FROM action_items
-        JOIN meetings
+        LEFT JOIN meetings
             ON action_items.meeting_id = meetings.id
         WHERE action_items.id = ?
         """,
@@ -501,8 +590,7 @@ def update_action_item(
             task,
             owner,
             owner_email,
-            due_date,
-            type
+            due_date
         FROM action_items
         WHERE id = ?
         """,
@@ -522,7 +610,6 @@ def update_action_item(
         "owner",
         "owner_email",
         "due_date",
-        "type",
     }
 
     # --------------------------------------------------------
@@ -1114,7 +1201,6 @@ def get_tasks(
             action_items.confidence,
             action_items.source_timestamp,
             action_items.status,
-            action_items.type,
             action_items.human_modified,
             action_items.updated_at,
             action_items.email_sent,
@@ -1122,7 +1208,7 @@ def get_tasks(
             action_items.completed_at,
             meetings.filename
         FROM action_items
-        JOIN meetings
+        LEFT JOIN meetings
             ON action_items.meeting_id = meetings.id
     """
 
@@ -1169,7 +1255,6 @@ def get_tasks(
             "confidence": item["confidence"],
             "source_timestamp": item["source_timestamp"],
             "status": item["status"],
-            "type": item["type"],
             "human_modified": item["human_modified"],
             "updated_at": item["updated_at"],
             "email_sent": bool(
@@ -1727,7 +1812,6 @@ def get_pending_review():
             action_items.confidence,
             action_items.source_timestamp,
             action_items.status,
-            action_items.type,
             action_items.email_sent,
             meetings.filename
         FROM action_items
@@ -1753,7 +1837,6 @@ def get_pending_review():
             "confidence": item["confidence"],
             "source_timestamp": item["source_timestamp"],
             "status": item["status"],
-            "type": item["type"],
             "email_sent": bool(
                 item["email_sent"]
             ),

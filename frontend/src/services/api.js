@@ -165,6 +165,17 @@ export async function getActionItems() {
 }
 
 
+export async function createActionItem(data) {
+  return request("/action-items", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+}
+
+
 export async function getActionItem(
   actionItemId
 ) {

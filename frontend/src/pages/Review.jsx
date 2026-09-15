@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 
 import {
   getPendingReview,
+  getUsers,
   confirmActionItem,
   dismissActionItem,
   updateActionItem,
@@ -16,10 +17,12 @@ function Review() {
 
   const [actionLoading, setActionLoading] = useState(null)
   const [editingId, setEditingId] = useState(null)
+  const [members, setMembers] = useState([])
 
   const [editForm, setEditForm] = useState({
     task: "",
     owner: "",
+    owner_email: "",
     due_date: "",
   })
 
@@ -29,11 +32,15 @@ function Review() {
       setLoading(true)
       setError(null)
 
-      const data = await getPendingReview()
+      const [data, users] = await Promise.all([
+        getPendingReview(),
+        getUsers(),
+      ])
 
       console.log("Pending review:", data)
 
       setItems(Array.isArray(data) ? data : [])
+      setMembers(Array.isArray(users) ? users : [])
 
     } catch (err) {
       console.error("Review loading error:", err)
@@ -55,6 +62,7 @@ function Review() {
     setEditForm({
       task: item.task || "",
       owner: item.owner || "",
+      owner_email: item.owner_email || "",
       due_date: item.due_date || "",
     })
   }
@@ -66,6 +74,7 @@ function Review() {
     setEditForm({
       task: "",
       owner: "",
+      owner_email: "",
       due_date: "",
     })
   }
@@ -77,6 +86,17 @@ function Review() {
     setEditForm((current) => ({
       ...current,
       [name]: value,
+    }))
+  }
+
+  function handleOwnerChange(event) {
+    const owner = event.target.value
+    const member = members.find((item) => item.name === owner)
+
+    setEditForm((current) => ({
+      ...current,
+      owner,
+      owner_email: member?.email || "",
     }))
   }
 
@@ -94,6 +114,7 @@ function Review() {
       const updated = await updateActionItem(id, {
         task: editForm.task.trim(),
         owner: editForm.owner.trim() || null,
+        owner_email: editForm.owner_email.trim() || null,
         due_date: editForm.due_date.trim() || null,
       })
 
@@ -240,7 +261,7 @@ function Review() {
             return (
               <div
                 key={item.id}
-                className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs"
+                className="rounded-2xl border border-slate-300 bg-white p-6 shadow-md"
               >
                 {/* Top row */}
                 <div className="flex items-start justify-between gap-6">
@@ -260,7 +281,7 @@ function Review() {
                       />
                     )}
 
-                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
+                    <div className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-500">
                       {!isEditing ? (
                         <>
                           <span>
@@ -275,16 +296,35 @@ function Review() {
                               {item.due_date || "Not specified"}
                             </span>
                           </span>
+                          <span>
+                            Email:{" "}
+                            <span className="font-semibold text-slate-800">
+                              {item.owner_email || "Not specified"}
+                            </span>
+                          </span>
                         </>
                       ) : (
                         <>
-                          <input
-                            type="text"
+                          <select
                             name="owner"
                             value={editForm.owner}
+                            onChange={handleOwnerChange}
+                            className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-500"
+                          >
+                            <option value="">Unassigned</option>
+                            {members.map((member) => (
+                              <option key={member.id} value={member.name}>
+                                {member.name}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="email"
+                            name="owner_email"
+                            value={editForm.owner_email}
                             onChange={handleEditChange}
                             className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-500"
-                            placeholder="Owner"
+                            placeholder="Owner email"
                           />
                           <input
                             type="text"
@@ -297,11 +337,6 @@ function Review() {
                         </>
                       )}
 
-                      {item.source_timestamp && (
-                        <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] text-slate-600">
-                          {item.source_timestamp}
-                        </span>
-                      )}
                     </div>
                   </div>
 
@@ -317,13 +352,13 @@ function Review() {
 
 
                 {/* Evidence */}
-                <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+                <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <p className="text-sm font-semibold uppercase tracking-wider text-slate-500">
                         Source evidence
                       </p>
-                      <p className="mt-0.5 text-sm text-slate-600">
+                      <p className="mt-1 text-sm text-slate-700">
                         Detected at{" "}
                         <span className="font-semibold text-slate-800">
                           {item.source_timestamp || "unknown timestamp"}
@@ -342,7 +377,7 @@ function Review() {
                   </div>
 
                   {item.filename && (
-                    <p className="mt-2 text-xs text-slate-400">
+                    <p className="mt-2 text-sm text-slate-500">
                       From {item.filename}
                     </p>
                   )}
@@ -350,29 +385,29 @@ function Review() {
 
 
                 {/* Actions */}
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-6 flex flex-wrap gap-3">
                   {!isEditing ? (
                     <>
                       <button
-                        onClick={() => handleConfirm(item.id)}
-                        disabled={isLoading}
-                        className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {isLoading ? "Updating..." : "Confirm"}
-                      </button>
-
-                      <button
                         onClick={() => startEditing(item)}
                         disabled={isLoading}
-                        className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="meeting-action-button rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-800 transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Edit
                       </button>
 
                       <button
+                        onClick={() => handleConfirm(item.id)}
+                        disabled={isLoading}
+                        className="meeting-confirm-button rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isLoading ? "Updating..." : "Confirm"}
+                      </button>
+
+                      <button
                         onClick={() => handleDismiss(item.id)}
                         disabled={isLoading}
-                        className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-500 shadow-2xs transition hover:bg-slate-50 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="meeting-action-button rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-800 transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Dismiss
                       </button>
@@ -382,7 +417,7 @@ function Review() {
                       <button
                         onClick={() => handleSaveEdit(item.id)}
                         disabled={isLoading}
-                        className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="meeting-save-button rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {isLoading ? "Saving..." : "Save changes"}
                       </button>
@@ -390,7 +425,7 @@ function Review() {
                       <button
                         onClick={cancelEditing}
                         disabled={isLoading}
-                        className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="meeting-action-button rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-800 transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Cancel
                       </button>

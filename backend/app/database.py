@@ -49,7 +49,7 @@ def initialize_database():
 
         CREATE TABLE IF NOT EXISTS action_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            meeting_id INTEGER NOT NULL,
+            meeting_id INTEGER,
             task TEXT NOT NULL,
             owner TEXT,
             owner_email TEXT,
@@ -169,6 +169,94 @@ def migrate_database():
             "PRAGMA table_info(action_items)"
         ).fetchall()
     }
+
+    action_item_table = cursor.execute(
+        "PRAGMA table_info(action_items)"
+    ).fetchall()
+    meeting_id_column = next(
+        column for column in action_item_table
+        if column["name"] == "meeting_id"
+    )
+
+    if meeting_id_column["notnull"]:
+        connection.commit()
+        cursor.execute("PRAGMA foreign_keys=OFF")
+        cursor.execute("ALTER TABLE action_items RENAME TO action_items_legacy")
+        cursor.execute(
+            """
+            CREATE TABLE action_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                meeting_id INTEGER,
+                task TEXT NOT NULL,
+                owner TEXT,
+                owner_email TEXT,
+                due_date TEXT,
+                confidence REAL,
+                source_timestamp TEXT,
+                status TEXT,
+                type TEXT,
+                human_modified INTEGER DEFAULT 0,
+                updated_at TIMESTAMP,
+                email_sent INTEGER DEFAULT 0,
+                completed INTEGER DEFAULT 0,
+                completed_at TIMESTAMP,
+                FOREIGN KEY (meeting_id) REFERENCES meetings(id)
+            )
+            """
+        )
+        cursor.execute(
+            """
+            INSERT INTO action_items (
+                id, meeting_id, task, owner, owner_email, due_date,
+                confidence, source_timestamp, status, type, human_modified,
+                updated_at, email_sent, completed, completed_at
+            )
+            SELECT id, meeting_id, task, owner, owner_email, due_date,
+                confidence, source_timestamp, status, type, human_modified,
+                updated_at, email_sent, completed, completed_at
+            FROM action_items_legacy
+            """
+        )
+        cursor.execute("DROP TABLE action_items_legacy")
+
+    history_foreign_keys = cursor.execute(
+        "PRAGMA foreign_key_list(action_item_history)"
+    ).fetchall()
+    if any(
+        foreign_key["table"] != "action_items"
+        for foreign_key in history_foreign_keys
+    ):
+        cursor.execute("PRAGMA foreign_keys=OFF")
+        cursor.execute(
+            "ALTER TABLE action_item_history RENAME TO action_item_history_legacy"
+        )
+        cursor.execute(
+            """
+            CREATE TABLE action_item_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                action_item_id INTEGER NOT NULL,
+                field_name TEXT NOT NULL,
+                old_value TEXT,
+                new_value TEXT,
+                changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (action_item_id) REFERENCES action_items(id)
+            )
+            """
+        )
+        cursor.execute(
+            """
+            INSERT INTO action_item_history (
+                id, action_item_id, field_name, old_value, new_value, changed_at
+            )
+            SELECT id, action_item_id, field_name, old_value, new_value, changed_at
+            FROM action_item_history_legacy
+            """
+        )
+        cursor.execute("DROP TABLE action_item_history_legacy")
+
+    connection.commit()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    connection.commit()
 
     if "owner_email" not in existing_action_item_cols:
         cursor.execute(
@@ -545,11 +633,10 @@ def save_meeting(
                 confidence,
                 source_timestamp,
                 status,
-                type,
                 human_modified,
                 email_sent
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 meeting_id,
@@ -560,7 +647,6 @@ def save_meeting(
                 item.confidence,
                 item.source_timestamp,
                 item.status,
-                item.type,
                 0,
                 0,
             ),
