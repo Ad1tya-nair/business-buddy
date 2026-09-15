@@ -1,0 +1,7 @@
+faster-whisper
+groq
+python-dotenv
+pydantic
+fastapi
+uvicorn
+python-multipart

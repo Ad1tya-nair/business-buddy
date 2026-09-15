@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+:root {
+  color: #172033;
+  background: #eef2f7;
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #eef2f7;
+  color: #172033;
+}
+
+main .bg-white {
+  border: 1px solid #cbd5e1;
+}
+
+main [class*="border-slate-200"],
+main [class*="border-slate-300"] {
+  border-color: #cbd5e1 !important;
+}
+
+main :is(div, section, a):not(button):not(input):not(select):not(textarea)[class*="rounded-xl"][class*="bg-white"],
+main :is(div, section, a):not(button):not(input):not(select):not(textarea)[class*="rounded-2xl"][class*="bg-white"],
+main :is(div, section, a):not(button):not(input):not(select):not(textarea)[class*="rounded-xl"][class*="bg-slate-900"],
+main :is(div, section, a):not(button):not(input):not(select):not(textarea)[class*="rounded-2xl"][class*="bg-slate-900"] {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.11), 0 3px 8px rgba(15, 23, 42, 0.08);
+}
+
+/* Keep compact page copy readable while preserving the existing heading hierarchy. */
+main .text-xs {
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+}
+
+main .text-sm {
+  font-size: 1rem;
+  line-height: 1.625rem;
+}
+
+main .text-base {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+main .text-lg {
+  font-size: 1.25rem;
+  line-height: 1.875rem;
+}
+
+main .text-xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+main .text-2xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+main .text-3xl {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+
+.meeting-intelligence-page {
+  background: #eef2f7 !important;
+  color: #172033 !important;
+}
+
+.meeting-intelligence-page [class*="bg-slate-950"],
+.meeting-intelligence-page [class*="bg-slate-900"] {
+  background-color: #ffffff !important;
+}
+
+.meeting-intelligence-page [class*="border-slate-800"],
+.meeting-intelligence-page [class*="border-slate-700"] {
+  border-color: #cbd5e1 !important;
+}
+
+.meeting-intelligence-page [class*="text-white"],
+.meeting-intelligence-page [class*="text-slate-100"],
+.meeting-intelligence-page [class*="text-slate-200"],
+.meeting-intelligence-page [class*="text-slate-300"] {
+  color: #172033 !important;
+}
+
+.meeting-intelligence-page .meeting-tab-active {
+  color: #ffffff !important;
+}
+
+.meeting-intelligence-page .meeting-confirm-button,
+.meeting-intelligence-page .meeting-save-button,
+.meeting-intelligence-page .meeting-dismissed-status {
+  color: #ffffff !important;
+}
+
+.meeting-intelligence-page .meeting-pending-status {
+  color: #92400e !important;
+}
+
+.meeting-intelligence-page .meeting-action-button {
+  color: #1e293b !important;
+}
+
+.meeting-intelligence-page .meeting-action-button:hover {
+  color: #0f172a !important;
+}
+
+.meeting-intelligence-page [class*="text-slate-400"],
+.meeting-intelligence-page [class*="text-slate-500"] {
+  color: #64748b !important;
+}
+
+.meeting-intelligence-page [class*="text-slate-600"] {
+  color: #475569 !important;
+}
+
+.meeting-intelligence-page [class*="bg-red-950"] {
+  background-color: #fef2f2 !important;
+}
+
+.meeting-intelligence-page [class*="border-red-900"] {
+  border-color: #fecaca !important;
+}
+
+.meeting-intelligence-page [class*="text-red-400"] {
+  color: #dc2626 !important;
+}
+
+.calendar-page [class*="bg-slate-900"],
+.calendar-page [class*="bg-slate-950"] {
+  background-color: #ffffff !important;
+}
+
+.calendar-page [class*="border-slate-700"],
+.calendar-page [class*="border-slate-800"] {
+  border-color: #cbd5e1 !important;
+}
+
+.calendar-page h1,
+.calendar-page h2,
+.calendar-page [class*="bg-slate-900"] [class*="text-white"],
+.calendar-page [class*="bg-slate-950"] [class*="text-white"],
+.calendar-page [class*="bg-slate-900"][class*="text-white"],
+.calendar-page [class*="bg-slate-950"][class*="text-white"] {
+  color: #172033 !important;
+}
+
+.calendar-page [class*="text-slate-200"],
+.calendar-page [class*="text-slate-300"] {
+  color: #334155 !important;
+}
+
+.calendar-page [class*="text-slate-400"],
+.calendar-page [class*="text-slate-500"] {
+  color: #64748b !important;
+}
+
+.calendar-page [class*="text-slate-600"] {
+  color: #94a3b8 !important;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: #c8e9e3;
+  color: #123c3b;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(13, 148, 136, 0.28);
+  outline-offset: 2px;
+}

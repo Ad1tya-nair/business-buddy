@@ -1,0 +1,23 @@
+[00:01:12] Priya: The launch checklist is still incomplete.
+
+[00:03:20] Rahul: Someone should probably take care of it.
+
+[00:05:44] Anita: Maybe Rahul can look at it sometime next week.
+
+[00:07:31] Rahul: I'll see what I can do.
+
+[00:10:02] Priya: We should probably talk to the client again at some point.
+
+[00:12:18] Anita: Maybe Thursday, but I'm not sure yet.
+
+[00:14:05] Priya: Let's not schedule anything until we hear back from them.
+
+[00:17:42] Rahul: It would be good to improve the dashboard eventually.
+
+[00:20:11] Anita: We could discuss that in our next planning session.
+
+[00:22:35] Priya: I think the authentication migration is the more important issue right now.
+
+[00:25:03] Rahul: I'll send the test results when I have them.
+
+[00:27:19] Anita: Does anyone know who is responsible for the staging environment?
