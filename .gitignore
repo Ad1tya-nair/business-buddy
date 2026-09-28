@@ -40,11 +40,13 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Generated application data
+backend/data/
 backend/data/outputs/
 backend/data/recordings/
 backend/data/transcripts/
 backend/data/faiss/
 backend/temp/
+backend/data/tests/*
 temp/
 
 # Generated presentations
@@ -66,5 +68,9 @@ desktop.ini
 *.sln
 
 # Test and tool caches
+tests/
 .pyre/
 .cache/
+
+backend/tests/
+.vscode/
